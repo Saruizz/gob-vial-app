@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../shared/models/auth.model';
 
 export interface ReportePayload {
@@ -17,7 +18,7 @@ export interface ReportePayload {
   providedIn: 'root',
 })
 export class ReporteService {
-  private readonly apiUrl = 'http://localhost:3000/api/v1/reportes';
+  private readonly apiUrl = `${environment.apiUrl}/reportes`;
 
   constructor(private http: HttpClient) {}
 
