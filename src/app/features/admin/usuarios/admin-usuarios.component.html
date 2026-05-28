@@ -1,0 +1,220 @@
+<div class="h-screen flex flex-col bg-gray-900 text-white">
+  <!-- Header -->
+  <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-6">
+      <h1 class="text-lg font-bold">GoberVial</h1>
+      <nav class="flex gap-2">
+        <a (click)="goToReportes()"
+          class="px-3 py-1.5 text-sm rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 cursor-pointer transition">
+          Reportes
+        </a>
+        <span class="px-3 py-1.5 text-sm rounded-lg bg-blue-600/20 text-blue-300 font-medium">
+          Usuarios
+        </span>
+      </nav>
+    </div>
+    <button (click)="logout()"
+      class="px-4 py-2 text-sm bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition">
+      Cerrar Sesion
+    </button>
+  </header>
+
+  <!-- Filters -->
+  <div class="bg-gray-800 px-6 py-3 flex items-center gap-4 shrink-0">
+    <div class="flex gap-2">
+      <button (click)="cambiarFiltro(null)"
+        [class.bg-gray-600]="filtroRol() === null"
+        [class.bg-gray-700]="filtroRol() !== null"
+        class="px-3 py-1.5 rounded-lg text-sm transition">
+        Todos
+      </button>
+      <button (click)="cambiarFiltro(1)"
+        [class.bg-gray-600]="filtroRol() === 1"
+        [class.bg-gray-700]="filtroRol() !== 1"
+        class="px-3 py-1.5 rounded-lg text-sm transition">
+        Ciudadanos
+      </button>
+      <button (click)="cambiarFiltro(2)"
+        [class.bg-gray-600]="filtroRol() === 2"
+        [class.bg-gray-700]="filtroRol() !== 2"
+        class="px-3 py-1.5 rounded-lg text-sm transition">
+        Administradores
+      </button>
+    </div>
+    <div class="flex-1 relative">
+      <input
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="buscar()"
+        placeholder="Buscar por nombre, email, documento..."
+        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button (click)="buscar()" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-y-auto p-6">
+    <!-- Loading -->
+    <div *ngIf="isLoading()" class="flex items-center justify-center py-12">
+      <svg class="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading()" class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-400 border-b border-gray-700">
+            <th class="pb-3 font-medium">Usuario</th>
+            <th class="pb-3 font-medium">Documento</th>
+            <th class="pb-3 font-medium">Rol</th>
+            <th class="pb-3 font-medium">Biometria</th>
+            <th class="pb-3 font-medium">Estado</th>
+            <th class="pb-3 font-medium">Registro</th>
+            <th class="pb-3 font-medium w-20"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usuarios()" class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+            <td class="py-3">
+              <p class="text-white font-medium">{{ u.nombres }} {{ u.apellidos }}</p>
+              <p class="text-gray-500 text-xs">{{ u.email }}</p>
+            </td>
+            <td class="py-3 text-gray-300">{{ u.numero_documento }}</td>
+            <td class="py-3">
+              <span [class.text-blue-300]="u.rol_id === 2" [class.text-gray-300]="u.rol_id === 1">
+                {{ u.rol_nombre }}
+              </span>
+            </td>
+            <td class="py-3">
+              <span [class]="getEstadoBiometriaClass(u.estado_biometria)">
+                {{ u.estado_biometria }}
+              </span>
+            </td>
+            <td class="py-3">
+              <span [class.text-green-400]="u.estado_cuenta" [class.text-red-400]="!u.estado_cuenta">
+                {{ u.estado_cuenta ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="py-3 text-gray-500 text-xs">
+              {{ u.fecha_registro | date:'dd/MM/yyyy' }}
+            </td>
+            <td class="py-3">
+              <button (click)="abrirEditar(u)"
+                class="px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">
+                Editar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages() > 1" class="flex items-center justify-between pt-4">
+        <button (click)="paginaAnterior()" [disabled]="currentPage() === 1"
+          class="px-4 py-2 text-sm bg-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-600 transition">
+          Anterior
+        </button>
+        <span class="text-sm text-gray-400">
+          Pag {{ currentPage() }} / {{ totalPages() }} ({{ totalUsuarios() }} total)
+        </span>
+        <button (click)="paginaSiguiente()" [disabled]="currentPage() === totalPages()"
+          class="px-4 py-2 text-sm bg-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-600 transition">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div *ngIf="usuarioEditando(); let user"
+  class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+  (click)="cerrarEditar()">
+  <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-700 shadow-2xl"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-bold text-white">Editar Usuario</h2>
+      <button (click)="cerrarEditar()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+    </div>
+
+    <div class="bg-gray-750 rounded-xl p-4 mb-5 space-y-2">
+      <p class="text-white font-medium">{{ user.nombres }} {{ user.apellidos }}</p>
+      <p class="text-gray-400 text-sm">{{ user.email }}</p>
+      <p class="text-gray-500 text-xs">Documento: {{ user.numero_documento }}</p>
+    </div>
+
+    <!-- Role -->
+    <div class="mb-4">
+      <label class="block text-sm text-gray-400 mb-2">Rol</label>
+      <div class="flex gap-2">
+        <button (click)="editRol = 1"
+          [class.bg-blue-600]="editRol === 1"
+          [class.bg-gray-700]="editRol !== 1"
+          class="flex-1 py-2 rounded-lg text-sm transition">
+          Ciudadano
+        </button>
+        <button (click)="editRol = 2"
+          [class.bg-purple-600]="editRol === 2"
+          [class.bg-gray-700]="editRol !== 2"
+          class="flex-1 py-2 rounded-lg text-sm transition">
+          Administrador
+        </button>
+      </div>
+    </div>
+
+    <!-- Account State -->
+    <div class="mb-4">
+      <label class="block text-sm text-gray-400 mb-2">Estado de cuenta</label>
+      <div class="flex gap-2">
+        <button (click)="editEstado = true"
+          [class.bg-green-600]="editEstado"
+          [class.bg-gray-700]="!editEstado"
+          class="flex-1 py-2 rounded-lg text-sm transition">
+          Activo
+        </button>
+        <button (click)="editEstado = false"
+          [class.bg-red-600]="!editEstado"
+          [class.bg-gray-700]="editEstado"
+          class="flex-1 py-2 rounded-lg text-sm transition">
+          Inactivo
+        </button>
+      </div>
+    </div>
+
+    <!-- Biometria -->
+    <div class="mb-6">
+      <label class="block text-sm text-gray-400 mb-2">Biometria</label>
+      <div class="flex gap-2">
+        <button (click)="editBiometria = 'Pendiente'"
+          [class.bg-yellow-600]="editBiometria === 'Pendiente'"
+          [class.bg-gray-700]="editBiometria !== 'Pendiente'"
+          class="flex-1 py-2 rounded-lg text-xs transition">
+          Pendiente
+        </button>
+        <button (click)="editBiometria = 'Verificada'"
+          [class.bg-green-600]="editBiometria === 'Verificada'"
+          [class.bg-gray-700]="editBiometria !== 'Verificada'"
+          class="flex-1 py-2 rounded-lg text-xs transition">
+          Verificada
+        </button>
+        <button (click)="editBiometria = 'Rechazada'"
+          [class.bg-red-600]="editBiometria === 'Rechazada'"
+          [class.bg-gray-700]="editBiometria !== 'Rechazada'"
+          class="flex-1 py-2 rounded-lg text-xs transition">
+          Rechazada
+        </button>
+      </div>
+    </div>
+
+    <button (click)="guardarCambios()" [disabled]="editando"
+      class="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white font-semibold rounded-xl transition">
+      {{ editando ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+</div>

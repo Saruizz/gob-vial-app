@@ -1,9 +1,17 @@
 <div class="h-screen flex flex-col bg-gray-900 text-white">
   <!-- Header -->
   <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-6">
       <h1 class="text-lg font-bold">GoberVial</h1>
-      <span class="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded-full">Admin</span>
+      <nav class="flex gap-2">
+        <span class="px-3 py-1.5 text-sm rounded-lg bg-blue-600/20 text-blue-300 font-medium">
+          Reportes
+        </span>
+        <a routerLink="/admin/usuarios"
+          class="px-3 py-1.5 text-sm rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 cursor-pointer transition">
+          Usuarios
+        </a>
+      </nav>
     </div>
     <button (click)="logout()"
       class="px-4 py-2 text-sm bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition">
