@@ -1,0 +1,236 @@
+<div class="h-screen flex flex-col bg-gray-900 text-white">
+  <!-- Header -->
+  <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-3">
+      <h1 class="text-lg font-bold">GoberVial</h1>
+      <span class="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded-full">Admin</span>
+    </div>
+    <button (click)="logout()"
+      class="px-4 py-2 text-sm bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition">
+      Cerrar Sesion
+    </button>
+  </header>
+
+  <!-- Filter tabs -->
+  <div class="bg-gray-800 px-6 py-3 flex gap-2 shrink-0 overflow-x-auto">
+    <button *ngFor="let est of estados"
+      (click)="cambiarFiltro(est.id)"
+      [class.opacity-100]="filtroEstado() === est.id"
+      [class.opacity-40]="filtroEstado() !== est.id"
+      class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition border"
+      [style.borderColor]="filtroEstado() === est.id ? est.color : 'transparent'"
+      [style.backgroundColor]="filtroEstado() === est.id ? est.color + '20' : 'transparent'"
+      [style.color]="est.color">
+      {{ est.nombre }}
+      <span *ngIf="filtroEstado() === est.id" class="ml-1 opacity-60">({{ totalReportes() }})</span>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- List -->
+    <div class="flex-1 overflow-y-auto p-6" [class.w-full]="!reporteSeleccionado()" [class.w-1/2]="reporteSeleccionado()">
+      <!-- Loading -->
+      <div *ngIf="isLoading()" class="flex items-center justify-center py-12">
+        <svg class="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMessage()" class="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-200 text-sm mb-4">
+        {{ errorMessage() }}
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="!isLoading() && reportes().length === 0" class="text-center py-12">
+        <p class="text-gray-400 text-lg">No hay reportes en este estado</p>
+      </div>
+
+      <!-- Table -->
+      <div *ngIf="reportes().length > 0" class="space-y-3">
+        <div *ngFor="let r of reportes()"
+          (click)="verDetalle(r)"
+          [class.ring-2]="reporteSeleccionado()?.id === r.id"
+          [class.ring-blue-400]="reporteSeleccionado()?.id === r.id"
+          class="bg-gray-800 rounded-xl p-4 cursor-pointer hover:bg-gray-700/70 transition border border-gray-700/50">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <span [class]="getNivelPeligroClass(r.nivel_peligro)" class="text-xs font-bold uppercase">
+                {{ r.nivel_peligro }}
+              </span>
+              <span *ngIf="r.prioridad_asignada" class="text-xs text-gray-400 ml-2">
+                | {{ r.prioridad_asignada }}
+              </span>
+            </div>
+            <span class="text-xs text-gray-500">#{{ r.id }}</span>
+          </div>
+          <h4 class="text-sm font-semibold text-white mb-1">{{ r.categoria_nombre }}</h4>
+          <div class="flex items-center gap-2 text-xs text-gray-400">
+            <span>{{ r.municipio_nombre }}</span>
+            <span>&middot;</span>
+            <span>{{ r.ciudadano_nombre }}</span>
+            <span>&middot;</span>
+            <span>{{ r.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="totalPages() > 1" class="flex items-center justify-between pt-4">
+          <button (click)="paginaAnterior()"
+            [disabled]="currentPage() === 1"
+            class="px-4 py-2 text-sm bg-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-600 transition">
+            Anterior
+          </button>
+          <span class="text-sm text-gray-400">
+            Pag {{ currentPage() }} / {{ totalPages() }} ({{ totalReportes() }} total)
+          </span>
+          <button (click)="paginaSiguiente()"
+            [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 text-sm bg-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-600 transition">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div *ngIf="reporteSeleccionado(); let r"
+      class="w-1/2 border-l border-gray-700 overflow-y-auto p-6 bg-gray-850">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-white">Reporte #{{ r.id }}</h2>
+        <button (click)="cerrarDetalle()"
+          class="text-gray-400 hover:text-white transition text-xl">&times;</button>
+      </div>
+
+      <!-- Success -->
+      <div *ngIf="triageSuccess()" class="bg-green-500/20 border border-green-400/30 rounded-xl p-4 text-green-200 text-sm mb-4">
+        Triage realizado exitosamente. El reporte ha cambiado de estado.
+      </div>
+
+      <!-- Metadata -->
+      <div class="bg-gray-800 rounded-xl p-4 mb-4 space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Estado</span>
+          <span class="text-white font-medium">{{ r.estado_nombre }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Categoria</span>
+          <span class="text-white">{{ r.categoria_nombre }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Municipio</span>
+          <span class="text-white">{{ r.municipio_nombre }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Nivel de peligro</span>
+          <span [class]="getNivelPeligroClass(r.nivel_peligro)" class="font-bold uppercase">
+            {{ r.nivel_peligro }}
+          </span>
+        </div>
+        <div class="flex justify-between" *ngIf="r.prioridad_asignada">
+          <span class="text-gray-400">Prioridad</span>
+          <span class="text-white">{{ r.prioridad_asignada }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Ciudadano</span>
+          <span class="text-white">{{ r.ciudadano_nombre }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Fecha</span>
+          <span class="text-white text-xs">{{ r.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Coordenadas</span>
+          <span class="text-white text-xs">{{ r.latitud.toFixed(6) }}, {{ r.longitud.toFixed(6) }}</span>
+        </div>
+        <div *ngIf="r.motivo_rechazo" class="flex justify-between">
+          <span class="text-gray-400">Motivo de rechazo</span>
+          <span class="text-red-300">{{ r.motivo_rechazo }}</span>
+        </div>
+      </div>
+
+      <!-- Evidence photo -->
+      <div class="mb-4" *ngIf="r.evidencia_foto_url">
+        <h4 class="text-sm font-medium text-gray-400 mb-2">Evidencia fotografica</h4>
+        <img [src]="'http://localhost:3000' + r.evidencia_foto_url"
+          alt="Evidencia"
+          class="w-full rounded-xl object-cover max-h-64"
+          onerror="this.style.display='none'" />
+      </div>
+
+      <!-- Map -->
+      <div class="mb-4">
+        <h4 class="text-sm font-medium text-gray-400 mb-2">Ubicacion</h4>
+        <div id="admin-map" class="map-container"></div>
+      </div>
+
+      <!-- Triage Actions -->
+      <div *ngIf="r.estado_id === 1" class="bg-gray-800 rounded-xl p-4">
+        <h4 class="text-sm font-semibold text-white mb-3">Realizar Triage</h4>
+
+        <div class="flex gap-2 mb-4">
+          <button
+            (click)="triageAccion = 'aceptar'"
+            [class.bg-green-600]="triageAccion === 'aceptar'"
+            [class.bg-gray-700]="triageAccion !== 'aceptar'"
+            class="flex-1 py-2 rounded-lg text-sm font-medium transition">
+            Aceptar
+          </button>
+          <button
+            (click)="triageAccion = 'rechazar'"
+            [class.bg-red-600]="triageAccion === 'rechazar'"
+            [class.bg-gray-700]="triageAccion !== 'rechazar'"
+            class="flex-1 py-2 rounded-lg text-sm font-medium transition">
+            Rechazar
+          </button>
+        </div>
+
+        <!-- Accept fields -->
+        <div *ngIf="triageAccion === 'aceptar'" class="space-y-3">
+          <label class="block text-sm text-gray-400">Prioridad tecnica</label>
+          <div class="flex gap-2">
+            <button *ngFor="let p of prioridades"
+              (click)="triagePrioridad = p"
+              [class.bg-blue-600]="triagePrioridad === p"
+              [class.bg-gray-700]="triagePrioridad !== p"
+              class="flex-1 py-2 rounded-lg text-sm transition">
+              {{ p }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Reject fields -->
+        <div *ngIf="triageAccion === 'rechazar'" class="space-y-3">
+          <label class="block text-sm text-gray-400">Motivo de rechazo (obligatorio)</label>
+          <textarea
+            [(ngModel)]="triageMotivo"
+            rows="3"
+            placeholder="Explica por que se rechaza este reporte..."
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Common fields -->
+        <div class="mt-3 space-y-3">
+          <label class="block text-sm text-gray-400">Comentario tecnico (opcional)</label>
+          <textarea
+            [(ngModel)]="triageComentario"
+            rows="2"
+            placeholder="Notas internas sobre este triage..."
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+          ></textarea>
+        </div>
+
+        <button
+          (click)="realizarTriage()"
+          [disabled]="triageEnviando"
+          class="w-full mt-4 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white font-semibold rounded-xl transition">
+          <ng-container *ngIf="!triageEnviando">Confirmar Triage</ng-container>
+          <ng-container *ngIf="triageEnviando">Procesando...</ng-container>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
