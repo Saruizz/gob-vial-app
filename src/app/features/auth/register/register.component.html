@@ -1,0 +1,238 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 px-4 py-8">
+  <div class="w-full max-w-lg">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur mb-3">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Registro Ciudadano</h1>
+      <p class="text-blue-300 text-sm mt-1">Completa tu registro para reportar danos viales</p>
+    </div>
+
+    <!-- Steps Indicator -->
+    <div class="flex items-center justify-center mb-6 gap-2">
+      <ng-container *ngFor="let step of [1, 2, 3]; let i = index">
+        <div class="flex items-center" *ngIf="i > 0">
+          <div class="w-8 h-0.5 rounded" [class.bg-blue-400]="currentStep > step" [class.bg-white/20]="currentStep <= step"></div>
+        </div>
+        <div
+          class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition"
+          [class.bg-blue-500]="currentStep === step"
+          [class.bg-blue-400]="currentStep > step"
+          [class.bg-white/10]="currentStep < step"
+          [class.text-white]="currentStep >= step"
+          [class.text-blue-300]="currentStep < step"
+        >
+          {{ currentStep > step ? '&#10003;' : step }}
+        </div>
+      </ng-container>
+    </div>
+    <p class="text-center text-blue-300 text-sm mb-6">
+      <span *ngIf="currentStep === 1">Paso 1: Datos personales</span>
+      <span *ngIf="currentStep === 2">Paso 2: Verificacion biometrica</span>
+      <span *ngIf="currentStep === 3">Paso 3: Confirmacion</span>
+    </p>
+
+    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+
+      <!-- Error -->
+      <div *ngIf="errorMessage()" class="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-200 text-sm mb-5">
+        {{ errorMessage() }}
+      </div>
+
+      <!-- STEP 1: Identity -->
+      <form *ngIf="currentStep === 1" [formGroup]="identityForm" (ngSubmit)="nextStep()" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-blue-200 mb-1">Nombres</label>
+            <input type="text" formControlName="nombres" placeholder="Juan"
+              class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+              [class.border-red-400]="nombresCtrl?.invalid && nombresCtrl?.touched" />
+            <p *ngIf="nombresCtrl?.invalid && nombresCtrl?.touched" class="text-red-300 text-xs mt-0.5">Requerido. Min 2 caracteres.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-blue-200 mb-1">Apellidos</label>
+            <input type="text" formControlName="apellidos" placeholder="Perez"
+              class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+              [class.border-red-400]="apellidosCtrl?.invalid && apellidosCtrl?.touched" />
+            <p *ngIf="apellidosCtrl?.invalid && apellidosCtrl?.touched" class="text-red-300 text-xs mt-0.5">Requerido. Min 2 caracteres.</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-1">Numero de Documento (Cedula)</label>
+          <input type="text" formControlName="numeroDocumento" placeholder="1234567890"
+            class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+            [class.border-red-400]="documentoCtrl?.invalid && documentoCtrl?.touched" />
+          <p *ngIf="documentoCtrl?.invalid && documentoCtrl?.touched" class="text-red-300 text-xs mt-0.5">Requerido. Min 5 digitos.</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-1">Correo Electronico</label>
+          <input type="email" formControlName="email" placeholder="tu@email.com"
+            class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+            [class.border-red-400]="emailCtrl?.invalid && emailCtrl?.touched" />
+          <p *ngIf="emailCtrl?.invalid && emailCtrl?.touched" class="text-red-300 text-xs mt-0.5">
+            <ng-container *ngIf="emailCtrl?.errors?.['required']">Requerido.</ng-container>
+            <ng-container *ngIf="emailCtrl?.errors?.['email']">Formato invalido.</ng-container>
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-1">Telefono (opcional)</label>
+          <input type="text" formControlName="telefono" placeholder="3001234567"
+            class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-1">Contrasena</label>
+          <input type="password" formControlName="password" placeholder="Min. 8 caracteres, mayuscula, minuscula y numero"
+            class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+            [class.border-red-400]="passwordCtrl?.invalid && passwordCtrl?.touched" />
+          <p *ngIf="passwordCtrl?.invalid && passwordCtrl?.touched" class="text-red-300 text-xs mt-0.5">
+            Debe tener al menos 8 caracteres, una mayuscula, una minuscula y un numero.
+          </p>
+        </div>
+
+        <button type="submit"
+          class="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition duration-200 mt-2">
+          Continuar a Verificacion
+        </button>
+
+        <p class="text-center text-blue-200 text-sm mt-4">
+          Ya tienes cuenta?
+          <a routerLink="/login" class="text-white font-semibold hover:underline">Inicia sesion</a>
+        </p>
+      </form>
+
+      <!-- STEP 2: Biometric -->
+      <div *ngIf="currentStep === 2" class="space-y-5">
+        <div class="text-center">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-500/20 mb-4">
+            <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-white">Verificacion Facial</h3>
+          <p class="text-blue-300 text-sm mt-2">
+            Para activar tu cuenta, debes completar la verificacion biometrica.
+            Esta validacion confirma tu identidad mediante reconocimiento facial (simulado).
+          </p>
+        </div>
+
+        <div class="bg-white/5 rounded-xl p-4 text-sm text-blue-200 space-y-2">
+          <div class="flex items-start gap-2">
+            <span class="text-blue-400 mt-0.5">&#9679;</span>
+            <span>Necesitaras acceso a la camara de tu dispositivo</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-blue-400 mt-0.5">&#9679;</span>
+            <span>El proceso tarda entre 2 y 4 segundos</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-blue-400 mt-0.5">&#9679;</span>
+            <span>Asegurate de estar en un lugar bien iluminado</span>
+          </div>
+        </div>
+
+        <!-- Resultado biometria -->
+        <div *ngIf="biometriaEstado() === 'Verificada'"
+          class="bg-green-500/20 border border-green-400/30 rounded-xl p-4 text-center">
+          <p class="text-green-200 font-semibold">Verificacion Exitosa</p>
+          <p class="text-green-300 text-sm mt-1">Tu identidad ha sido verificada correctamente.</p>
+        </div>
+
+        <div *ngIf="biometriaEstado() === 'Rechazada'"
+          class="bg-red-500/20 border border-red-400/30 rounded-xl p-4 text-center">
+          <p class="text-red-200 font-semibold">Verificacion Rechazada</p>
+          <p class="text-red-300 text-sm mt-1">Intenta de nuevo o contacta a soporte.</p>
+        </div>
+
+        <button
+          (click)="verificarBiometria()"
+          [disabled]="biometriaVerificando() || biometriaEstado() === 'Verificada'"
+          class="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/50 text-white font-semibold rounded-xl transition duration-200 flex items-center justify-center"
+        >
+          <ng-container *ngIf="!biometriaVerificando()">
+            <ng-container *ngIf="biometriaEstado() !== 'Verificada'">Iniciar Verificacion Facial</ng-container>
+            <ng-container *ngIf="biometriaEstado() === 'Verificada'">Verificacion Completada</ng-container>
+          </ng-container>
+          <ng-container *ngIf="biometriaVerificando()">
+            <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Verificando...
+          </ng-container>
+        </button>
+
+        <div class="flex gap-3">
+          <button (click)="prevStep()" type="button"
+            class="flex-1 py-3 bg-white/5 border border-white/10 text-blue-200 font-semibold rounded-xl hover:bg-white/10 transition">
+            Atras
+          </button>
+          <button (click)="nextStep()" type="button"
+            [class.opacity-50]="biometriaEstado() !== 'Verificada'"
+            [disabled]="biometriaEstado() !== 'Verificada'"
+            class="flex-1 py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/50 text-white font-semibold rounded-xl transition disabled:cursor-not-allowed">
+            Continuar
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Confirmation -->
+      <div *ngIf="currentStep === 3" class="space-y-5 text-center">
+        <div *ngIf="registroCompletado()">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 mb-4">
+            <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white">Registro Exitoso</h3>
+          <p class="text-blue-300 text-sm mt-2">
+            Tu cuenta ha sido creada exitosamente. Ahora puedes comenzar a reportar danos viales en el departamento del Magdalena.
+          </p>
+        </div>
+
+        <div *ngIf="!registroCompletado()" class="space-y-5">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-500/20 mb-4">
+            <svg class="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white">Pendiente de Verificacion</h3>
+          <p class="text-blue-300 text-sm">
+            Tu registro fue creado, pero necesitas completar la verificacion biometrica desde la seccion de perfil.
+          </p>
+          <p class="text-blue-300/70 text-xs">
+            Algunas funcionalidades estaran limitadas hasta que completes este paso.
+          </p>
+        </div>
+
+        <div class="pt-4 flex flex-col gap-3">
+          <button
+            (click)="goToDashboard()"
+            *ngIf="registroCompletado()"
+            class="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
+            Ir al Dashboard
+          </button>
+
+          <button
+            (click)="goToDashboard()"
+            *ngIf="!registroCompletado()"
+            class="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
+            Ir a Mi Perfil
+          </button>
+
+          <button
+            [routerLink]="['/login']"
+            class="w-full py-3 bg-white/5 border border-white/10 text-blue-200 font-semibold rounded-xl hover:bg-white/10 transition">
+            Ir al Inicio de Sesion
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
