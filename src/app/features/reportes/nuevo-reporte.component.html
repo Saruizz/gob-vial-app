@@ -1,0 +1,184 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 px-4 py-6">
+  <div class="w-full max-w-lg mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6">
+      <button (click)="goToDashboard()" class="text-blue-300 hover:text-white transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h1 class="text-xl font-bold text-white">Nuevo Reporte</h1>
+    </div>
+
+    <!-- Steps Indicator -->
+    <div class="flex items-center justify-center mb-6 gap-2">
+      <ng-container *ngFor="let step of [1, 2, 3]; let i = index">
+        <div class="flex items-center" *ngIf="i > 0">
+          <div class="w-6 h-0.5 rounded" [class.bg-blue-400]="currentStep > step" [class.bg-white/20]="currentStep <= step"></div>
+        </div>
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition"
+          [class.bg-blue-500]="currentStep === step"
+          [class.bg-blue-400]="currentStep > step"
+          [class.bg-white/10]="currentStep < step"
+          [class.text-white]="currentStep >= step"
+          [class.text-blue-300]="currentStep < step">
+          {{ step }}
+        </div>
+      </ng-container>
+    </div>
+    <p class="text-center text-blue-300 text-sm mb-5">
+      <span *ngIf="currentStep === 1">Datos del dano</span>
+      <span *ngIf="currentStep === 2">Evidencia y ubicacion</span>
+      <span *ngIf="currentStep === 3">Confirmacion de envio</span>
+    </p>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage()" class="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-200 text-sm mb-4">
+      {{ errorMessage() }}
+    </div>
+
+    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
+
+      <!-- STEP 1: Datos del dano -->
+      <div *ngIf="currentStep === 1" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-2">Tipo de dano</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button *ngFor="let cat of categorias"
+              (click)="seleccionarCategoria(cat.id)"
+              [class.border-blue-400]="categoriaId === cat.id"
+              [class.bg-blue-500/20]="categoriaId === cat.id"
+              [class.border-white/10]="categoriaId !== cat.id"
+              class="p-3 border rounded-xl text-left text-sm text-white hover:bg-white/5 transition">
+              <span class="block text-lg mb-0.5" [innerHTML]="cat.icono"></span>
+              {{ cat.nombre }}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-2">Municipio</label>
+          <select
+            [(ngModel)]="municipioId"
+            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+            <option [ngValue]="null" disabled selected class="bg-gray-800">Selecciona un municipio</option>
+            <option *ngFor="let m of municipios" [ngValue]="m.id" class="bg-gray-800">{{ m.nombre }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-2">Nivel de peligro</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button *ngFor="let nivel of nivelesPeligro"
+              (click)="seleccionarNivelPeligro(nivel.id)"
+              [class.opacity-100]="nivelPeligro === nivel.id"
+              [class.opacity-50]="nivelPeligro !== nivel.id"
+              [class.ring-2]="nivelPeligro === nivel.id"
+              [class.ring-white]="nivelPeligro === nivel.id"
+              class="p-2 rounded-xl text-center text-xs font-semibold text-white transition"
+              [class]="nivel.color">
+              {{ nivel.nombre }}
+            </button>
+          </div>
+        </div>
+
+        <button (click)="nextStep()"
+          class="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
+          Continuar
+        </button>
+      </div>
+
+      <!-- STEP 2: Evidencia y ubicacion -->
+      <div *ngIf="currentStep === 2" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-2">Evidencia fotografica</label>
+          <div (click)="capturarFoto()"
+            class="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:bg-white/5 transition">
+            <ng-container *ngIf="!fotoPreview">
+              <svg class="w-10 h-10 text-blue-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p class="text-blue-200 text-sm">Toca para tomar una foto</p>
+              <p class="text-blue-400/50 text-xs mt-1">Solo se permite camara en vivo</p>
+            </ng-container>
+            <ng-container *ngIf="fotoPreview">
+              <img [src]="fotoPreview" alt="Evidencia" class="w-full h-48 object-cover rounded-lg" />
+              <p class="text-blue-300 text-xs mt-2">Toca para tomar otra foto</p>
+            </ng-container>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-blue-200 mb-2">Ubicacion GPS</label>
+          <div class="bg-white/5 rounded-xl p-4">
+            <button (click)="capturarUbicacion()"
+              class="w-full py-3 border border-blue-400/30 bg-blue-500/10 text-blue-200 rounded-xl hover:bg-blue-500/20 transition text-sm font-medium flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <ng-container *ngIf="!coordenadasObtenidas()">Obtener mi ubicacion</ng-container>
+              <ng-container *ngIf="coordenadasObtenidas()">Re-obtener ubicacion</ng-container>
+            </button>
+
+            <div *ngIf="coordenadasObtenidas()" class="mt-3 text-center">
+              <p class="text-green-200 text-sm font-medium">Ubicacion capturada</p>
+              <p class="text-blue-300/70 text-xs mt-1">
+                Lat: {{ latitud?.toFixed(6) }} | Lng: {{ longitud?.toFixed(6) }}
+              </p>
+            </div>
+
+            <div *ngIf="!coordenadasObtenidas()" class="mt-3 text-center">
+              <p class="text-yellow-300/70 text-xs">
+                Toca el boton para obtener tus coordenadas GPS exactas
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button (click)="prevStep()"
+            class="flex-1 py-3 bg-white/5 border border-white/10 text-blue-200 font-semibold rounded-xl hover:bg-white/10 transition">
+            Atras
+          </button>
+          <button (click)="nextStep()"
+            class="flex-1 py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
+            Revisar y enviar
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Confirmacion -->
+      <div *ngIf="currentStep === 3" class="space-y-5 text-center">
+        <ng-container *ngIf="!isLoading()">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 mb-3">
+            <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white">Reporte Enviado</h3>
+          <p class="text-blue-300 text-sm mt-2 mb-6">
+            Tu reporte ha sido registrado exitosamente. Un administrador revisara tu caso y te notificara sobre el avance.
+          </p>
+
+          <button (click)="goToDashboard()"
+            class="w-full py-3 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition">
+            Volver al Dashboard
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isLoading()">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-500/20 mb-3">
+            <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white">Enviando reporte...</h3>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

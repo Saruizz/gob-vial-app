@@ -28,6 +28,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'nuevo-reporte',
+    loadComponent: () =>
+      import('./features/reportes/nuevo-reporte.component').then(
+        (m) => m.NuevoReporteComponent
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'admin',
     loadComponent: () =>
       import('./features/admin/admin.component').then(
