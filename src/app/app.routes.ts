@@ -5,6 +5,13 @@ import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'mapa',
+    loadComponent: () =>
+      import('./features/public/mapa/mapa-publico.component').then(
+        (m) => m.MapaPublicoComponent
+      ),
+  },
+  {
     path: '',
     redirectTo: '/login',
     pathMatch: 'full',
