@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6">
+    <div class="min-h-dvh bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6">
       <div class="max-w-md mx-auto">
         <div class="flex items-center justify-between mb-6">
           <div>

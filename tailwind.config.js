@@ -5,6 +5,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      height: {
+        dvh: '100dvh',
+      },
+      minHeight: {
+        dvh: '100dvh',
+      },
       colors: {
         primary: {
           50: '#eff6ff',

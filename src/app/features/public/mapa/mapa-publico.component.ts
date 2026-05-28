@@ -24,7 +24,7 @@ interface PinPublico {
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="h-screen flex flex-col">
+    <div class="h-dvh flex flex-col">
       <header class="bg-white shadow-md px-6 py-3 flex items-center justify-between shrink-0 z-10">
         <div class="flex items-center gap-3">
           <svg class="w-7 h-7 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ interface PinPublico {
     </div>
   `,
   styles: [`
-    :host { display: block; height: 100vh; }
+    :host { display: block; height: 100dvh; }
   `],
 })
 export class MapaPublicoComponent implements OnInit, OnDestroy {

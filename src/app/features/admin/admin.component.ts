@@ -2,7 +2,6 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import {
@@ -13,21 +12,13 @@ import {
 } from '../../core/services/admin.service';
 import * as L from 'leaflet';
 
-interface MapaMarker {
-  id: number;
-  lat: number;
-  lng: number;
-  popup: string;
-  color: string;
-}
-
 @Component({
   selector: 'app-admin',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './admin.component.html',
   styles: [`
-    :host { display: block; height: 100vh; }
+    :host { display: block; height: 100dvh; }
     .map-container { height: 300px; border-radius: 12px; overflow: hidden; }
   `],
 })

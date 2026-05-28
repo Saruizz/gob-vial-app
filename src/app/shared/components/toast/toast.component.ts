@@ -18,8 +18,16 @@ import { Toast, ToastType } from '../../models/error.model';
       flex-direction: column-reverse;
       gap: 8px;
       max-width: 380px;
-      width: 100%;
+      width: calc(100% - 32px);
       pointer-events: none;
+    }
+    @media (max-width: 640px) {
+      :host {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+      }
     }
     .toast-item {
       pointer-events: auto;
