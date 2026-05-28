@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 import * as L from 'leaflet';
 import 'leaflet.markercluster';
@@ -25,20 +26,28 @@ interface PinPublico {
   imports: [CommonModule, RouterLink],
   template: `
     <div class="h-dvh flex flex-col">
-      <header class="bg-white shadow-md px-6 py-3 flex items-center justify-between shrink-0 z-10">
-        <div class="flex items-center gap-3">
-          <svg class="w-7 h-7 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <header class="bg-white shadow-md px-4 py-3 flex items-center justify-between shrink-0 z-10">
+        <div class="flex items-center gap-2">
+          <svg class="w-6 h-6 text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V5.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
           <div>
-            <h1 class="text-lg font-bold text-gray-900">GoberVial</h1>
+            <h1 class="text-base sm:text-lg font-bold text-gray-900">GoberVial</h1>
             <p class="text-xs text-gray-500">Visor de Transparencia - Magdalena</p>
           </div>
         </div>
-        <div class="flex items-center gap-4 text-sm">
-          <span class="text-gray-500">{{ totalPines }} reportes mapeados</span>
-          <a routerLink="/register" class="text-green-600 font-medium hover:underline">Registrarse</a>
-          <a routerLink="/login" class="text-blue-600 font-medium hover:underline">Iniciar Sesion</a>
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-gray-500 hidden sm:inline">{{ totalPines }} reportes</span>
+          <ng-container *ngIf="logueado; else guestLinks">
+            <a routerLink="/dashboard" class="text-blue-600 font-medium hover:underline">Ir al Dashboard</a>
+            <span class="text-gray-300 hidden sm:inline">|</span>
+            <a routerLink="/nuevo-reporte" class="text-green-600 font-medium hover:underline hidden sm:inline">Nuevo Reporte</a>
+          </ng-container>
+          <ng-template #guestLinks>
+            <a routerLink="/register" class="text-green-600 font-medium hover:underline">Registrarse</a>
+            <span class="text-gray-300">|</span>
+            <a routerLink="/login" class="text-blue-600 font-medium hover:underline">Ingresar</a>
+          </ng-template>
         </div>
       </header>
       <div class="flex-1 relative">
@@ -55,11 +64,16 @@ interface PinPublico {
 })
 export class MapaPublicoComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private mapa: L.Map | null = null;
   private clusterGroup: L.MarkerClusterGroup | null = null;
 
   isLoading = true;
   totalPines = 0;
+
+  get logueado(): boolean {
+    return this.authService.isAuthenticated();
+  }
 
   ngOnInit(): void {
     setTimeout(() => this.inicializarMapa(), 100);

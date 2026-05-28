@@ -22,6 +22,7 @@ import 'leaflet.markercluster';
   styles: [`
     :host { display: block; height: 100dvh; }
     .map-container { height: 300px; border-radius: 12px; overflow: hidden; }
+    #admin-mapa-container { min-height: 400px; }
   `],
 })
 export class AdminComponent implements OnInit {
@@ -119,7 +120,9 @@ export class AdminComponent implements OnInit {
       next: (res: PaginatedResult<ReporteAdmin>) => {
         this.todosLosReportes = res.data;
         this.isLoading.set(false);
-        setTimeout(() => this.inicializarMapaGeneral(), 100);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => this.inicializarMapaGeneral());
+        });
       },
       error: () => {
         this.isLoading.set(false);
@@ -128,12 +131,15 @@ export class AdminComponent implements OnInit {
   }
 
   private inicializarMapaGeneral(): void {
+    const container = document.getElementById('admin-mapa-container');
+    if (!container) {
+      requestAnimationFrame(() => this.inicializarMapaGeneral());
+      return;
+    }
+
     if (this.mapaActual) {
       this.mapaActual.remove();
     }
-
-    const container = document.getElementById('admin-mapa-container');
-    if (!container) return;
 
     this.mapaActual = L.map('admin-mapa-container').setView([10.5, -74.3], 9);
 
