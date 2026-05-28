@@ -1,0 +1,28 @@
+<div *ngFor="let toast of toasts()" class="toast-item">
+  <div
+    class="rounded-xl border-l-4 shadow-2xl p-4 flex items-start gap-3 text-white w-full"
+    [class]="getBgColor(toast.type) + ' ' + getBorderColor(toast.type)">
+    <svg class="w-5 h-5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        [attr.d]="getIcon(toast.type)" />
+    </svg>
+    <div class="flex-1 min-w-0">
+      <p class="font-semibold text-sm">{{ toast.title }}</p>
+      <p class="text-xs opacity-80 mt-0.5">{{ toast.message }}</p>
+      <div class="mt-2 h-1 bg-white/20 rounded-full overflow-hidden">
+        <div
+          class="h-full bg-white/40 rounded-full"
+          [style.width]="'100%'"
+          [style.animation]="'progressBar ' + getAnimationDuration(toast.duration) + ' linear forwards'"
+        ></div>
+      </div>
+    </div>
+    <button
+      (click)="dismiss(toast.id)"
+      class="text-white/60 hover:text-white transition shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+</div>

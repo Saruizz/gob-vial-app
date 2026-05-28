@@ -2,8 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { RegisterRequest, BiometriaEstado, BiometriaStatus } from '../../../shared/models/auth.model';
 
 @Component({
@@ -14,6 +14,7 @@ import { RegisterRequest, BiometriaEstado, BiometriaStatus } from '../../../shar
 })
 export class RegisterComponent {
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
@@ -39,7 +40,6 @@ export class RegisterComponent {
   });
 
   isLoading = signal(false);
-  errorMessage = signal<string | null>(null);
   biometriaEstado = signal<BiometriaEstado>('Pendiente');
   biometriaVerificando = signal(false);
   registroCompletado = signal(false);
@@ -49,10 +49,15 @@ export class RegisterComponent {
       const controls = ['nombres', 'apellidos', 'numeroDocumento', 'email', 'password'];
       controls.forEach((c) => this.identityForm.get(c)?.markAsTouched());
       const invalid = controls.some((c) => this.identityForm.get(c)?.invalid);
-      if (invalid) return;
+      if (invalid) {
+        this.notificationService.warning(
+          'Completa todos los campos requeridos correctamente',
+          'Formulario incompleto'
+        );
+        return;
+      }
 
       this.isLoading.set(true);
-      this.errorMessage.set(null);
 
       const data: RegisterRequest = {
         nombres: this.identityForm.value.nombres,
@@ -69,11 +74,11 @@ export class RegisterComponent {
       this.authService.register(data).subscribe({
         next: () => {
           this.isLoading.set(false);
+          this.notificationService.success('Cuenta creada exitosamente');
           this.currentStep++;
         },
-        error: (err: HttpErrorResponse) => {
+        error: () => {
           this.isLoading.set(false);
-          this.errorMessage.set(err.error?.message || err.message || 'Error al registrar');
         },
       });
       return;
@@ -92,16 +97,25 @@ export class RegisterComponent {
 
   verificarBiometria(): void {
     this.biometriaVerificando.set(true);
-    this.errorMessage.set(null);
 
     this.authService.verifyBiometria().subscribe({
       next: (res: BiometriaStatus) => {
         this.biometriaVerificando.set(false);
         this.biometriaEstado.set(res.estado);
+        if (res.estado === 'Verificada') {
+          this.notificationService.success(
+            'Tu identidad ha sido verificada exitosamente',
+            'Biometria aprobada'
+          );
+        } else {
+          this.notificationService.warning(
+            'La verificacion biometrica fue rechazada. Intenta de nuevo.',
+            'Biometria rechazada'
+          );
+        }
       },
-      error: (err: HttpErrorResponse) => {
+      error: () => {
         this.biometriaVerificando.set(false);
-        this.errorMessage.set(err.error?.message || 'Error en verificacion biometrica');
       },
     });
   }

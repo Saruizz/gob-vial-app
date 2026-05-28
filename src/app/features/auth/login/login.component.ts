@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { LoginRequest } from '../../../shared/models/auth.model';
 
 @Component({
@@ -14,6 +15,7 @@ import { LoginRequest } from '../../../shared/models/auth.model';
 })
 export class LoginComponent {
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
@@ -23,7 +25,6 @@ export class LoginComponent {
   });
 
   isLoading = false;
-  errorMessage: string | null = null;
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
@@ -32,7 +33,6 @@ export class LoginComponent {
     }
 
     this.isLoading = true;
-    this.errorMessage = null;
 
     const data: LoginRequest = this.loginForm.value;
 
@@ -47,7 +47,12 @@ export class LoginComponent {
       },
       error: (err: HttpErrorResponse) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.message || err.message || 'Error al iniciar sesion';
+        if (err.status === 401) {
+          this.notificationService.error(
+            err.error?.message || 'Credenciales invalidas',
+            'Error de autenticacion'
+          );
+        }
       },
     });
   }

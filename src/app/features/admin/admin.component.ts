@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import {
   AdminService,
   ReporteAdmin,
@@ -33,12 +34,12 @@ interface MapaMarker {
 export class AdminComponent implements OnInit {
   private adminService = inject(AdminService);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   reportes = signal<ReporteAdmin[]>([]);
   reporteSeleccionado = signal<ReporteAdmin | null>(null);
   isLoading = signal(false);
-  errorMessage = signal<string | null>(null);
   triageSuccess = signal(false);
 
   filtroEstado = signal<number | null>(1);
@@ -71,7 +72,6 @@ export class AdminComponent implements OnInit {
 
   cargarReportes(): void {
     this.isLoading.set(true);
-    this.errorMessage.set(null);
 
     this.adminService
       .listarReportes(this.filtroEstado(), this.currentPage(), this.pageSize)
@@ -82,9 +82,8 @@ export class AdminComponent implements OnInit {
           this.totalReportes.set(res.meta.total);
           this.isLoading.set(false);
         },
-        error: (err: HttpErrorResponse) => {
+        error: () => {
           this.isLoading.set(false);
-          this.errorMessage.set(err.error?.message || 'Error loading reports');
         },
       });
   }
@@ -172,12 +171,14 @@ export class AdminComponent implements OnInit {
       this.triageAccion === 'rechazar' &&
       !this.triageMotivo.trim()
     ) {
-      this.errorMessage.set('Rejection reason is required');
+      this.notificationService.warning(
+        'Debes escribir un motivo de rechazo',
+        'Campo requerido'
+      );
       return;
     }
 
     this.triageEnviando = true;
-    this.errorMessage.set(null);
 
     const input: TriageInput = {
       accion: this.triageAccion,
@@ -196,11 +197,14 @@ export class AdminComponent implements OnInit {
         next: () => {
           this.triageEnviando = false;
           this.triageSuccess.set(true);
+          this.notificationService.success(
+            `Reporte ${input.accion === 'aceptar' ? 'aceptado' : 'rechazado'} exitosamente`,
+            'Triage completado'
+          );
           this.cargarReportes();
         },
-        error: (err: HttpErrorResponse) => {
+        error: () => {
           this.triageEnviando = false;
-          this.errorMessage.set(err.error?.message || 'Error performing triage');
         },
       });
   }

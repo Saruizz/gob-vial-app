@@ -38,11 +38,6 @@
         </svg>
       </div>
 
-      <!-- Error -->
-      <div *ngIf="errorMessage()" class="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-200 text-sm mb-4">
-        {{ errorMessage() }}
-      </div>
-
       <!-- Empty state -->
       <div *ngIf="!isLoading() && reportes().length === 0" class="text-center py-12">
         <p class="text-gray-400 text-lg">No hay reportes en este estado</p>

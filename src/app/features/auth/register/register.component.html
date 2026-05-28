@@ -36,11 +36,6 @@
 
     <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
 
-      <!-- Error -->
-      <div *ngIf="errorMessage()" class="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-200 text-sm mb-5">
-        {{ errorMessage() }}
-      </div>
-
       <!-- STEP 1: Identity -->
       <form *ngIf="currentStep === 1" [formGroup]="identityForm" (ngSubmit)="nextStep()" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
