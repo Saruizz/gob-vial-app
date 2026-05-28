@@ -50,7 +50,35 @@ export class RegisterComponent {
       controls.forEach((c) => this.identityForm.get(c)?.markAsTouched());
       const invalid = controls.some((c) => this.identityForm.get(c)?.invalid);
       if (invalid) return;
+
+      this.isLoading.set(true);
+      this.errorMessage.set(null);
+
+      const data: RegisterRequest = {
+        nombres: this.identityForm.value.nombres,
+        apellidos: this.identityForm.value.apellidos,
+        numeroDocumento: this.identityForm.value.numeroDocumento,
+        email: this.identityForm.value.email,
+        password: this.identityForm.value.password,
+      };
+
+      if (this.identityForm.value.telefono) {
+        data.telefono = this.identityForm.value.telefono;
+      }
+
+      this.authService.register(data).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.currentStep++;
+        },
+        error: (err: HttpErrorResponse) => {
+          this.isLoading.set(false);
+          this.errorMessage.set(err.error?.message || err.message || 'Error al registrar');
+        },
+      });
+      return;
     }
+
     if (this.currentStep < this.totalSteps) {
       this.currentStep++;
     }
@@ -60,41 +88,6 @@ export class RegisterComponent {
     if (this.currentStep > 1) {
       this.currentStep--;
     }
-  }
-
-  onSubmit(): void {
-    if (this.identityForm.invalid) {
-      this.identityForm.markAllAsTouched();
-      this.currentStep = 1;
-      return;
-    }
-
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    const data: RegisterRequest = {
-      nombres: this.identityForm.value.nombres,
-      apellidos: this.identityForm.value.apellidos,
-      numeroDocumento: this.identityForm.value.numeroDocumento,
-      email: this.identityForm.value.email,
-      password: this.identityForm.value.password,
-    };
-
-    if (this.identityForm.value.telefono) {
-      data.telefono = this.identityForm.value.telefono;
-    }
-
-    this.authService.register(data).subscribe({
-      next: () => {
-        this.isLoading.set(false);
-        this.currentStep = 3;
-        this.registroCompletado.set(true);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(err.error?.message || err.message || 'Error al registrar');
-      },
-    });
   }
 
   verificarBiometria(): void {
