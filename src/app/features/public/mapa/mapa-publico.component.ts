@@ -37,6 +37,7 @@ interface PinPublico {
         </div>
         <div class="flex items-center gap-4 text-sm">
           <span class="text-gray-500">{{ totalPines }} reportes mapeados</span>
+          <a routerLink="/register" class="text-green-600 font-medium hover:underline">Registrarse</a>
           <a routerLink="/login" class="text-blue-600 font-medium hover:underline">Iniciar Sesion</a>
         </div>
       </header>

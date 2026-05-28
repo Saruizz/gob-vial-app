@@ -44,6 +44,14 @@ import { CommonModule } from '@angular/common';
         <div class="bg-white/5 rounded-xl p-4 text-center">
           <p class="text-blue-300/50 text-sm">Mis reportes apareceran aqui proximamente</p>
         </div>
+
+        <button (click)="goToMapa()"
+          class="w-full mt-3 py-3 bg-white/10 border border-white/20 text-blue-200 font-medium rounded-xl hover:bg-white/20 transition flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V5.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Ver Mapa de Reportes
+        </button>
       </div>
     </div>
   `,
@@ -64,6 +72,10 @@ export class DashboardComponent {
 
   goToNuevoReporte(): void {
     this.router.navigate(['/nuevo-reporte']);
+  }
+
+  goToMapa(): void {
+    this.router.navigate(['/mapa']);
   }
 
   logout(): void {

@@ -4,9 +4,20 @@
     <div class="flex items-center gap-6">
       <h1 class="text-lg font-bold">GoberVial</h1>
       <nav class="flex gap-2">
-        <span class="px-3 py-1.5 text-sm rounded-lg bg-blue-600/20 text-blue-300 font-medium">
+        <button (click)="vistaActiva.set('reportes'); cerrarDetalle()"
+          [class.bg-blue-600/20]="vistaActiva() === 'reportes'"
+          [class.text-blue-300]="vistaActiva() === 'reportes'"
+          [class.text-gray-400]="vistaActiva() !== 'reportes'"
+          class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition">
           Reportes
-        </span>
+        </button>
+        <button (click)="vistaActiva.set('mapa'); cerrarDetalle(); cargarReportesMapa()"
+          [class.bg-blue-600/20]="vistaActiva() === 'mapa'"
+          [class.text-blue-300]="vistaActiva() === 'mapa'"
+          [class.text-gray-400]="vistaActiva() !== 'mapa'"
+          class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition">
+          Mapa
+        </button>
         <a routerLink="/admin/usuarios"
           class="px-3 py-1.5 text-sm rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 cursor-pointer transition">
           Usuarios
@@ -19,8 +30,8 @@
     </button>
   </header>
 
-  <!-- Filter tabs -->
-  <div class="bg-gray-800 px-6 py-3 flex gap-2 shrink-0 overflow-x-auto">
+  <!-- Filter tabs (solo en vista reportes) -->
+  <div *ngIf="vistaActiva() === 'reportes'" class="bg-gray-800 px-6 py-3 flex gap-2 shrink-0 overflow-x-auto">
     <button *ngFor="let est of estados"
       (click)="cambiarFiltro(est.id)"
       [class.opacity-100]="filtroEstado() === est.id"
@@ -34,8 +45,18 @@
     </button>
   </div>
 
-  <!-- Content -->
-  <div class="flex-1 flex overflow-hidden">
+  <!-- Map view -->
+  <div *ngIf="vistaActiva() === 'mapa' && !isLoading()" class="flex-1 relative" id="admin-mapa-container">
+    <div *ngIf="isLoading()" class="absolute inset-0 flex items-center justify-center bg-gray-900/50 z-10">
+      <svg class="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Content (solo en vista reportes) -->
+  <div *ngIf="vistaActiva() === 'reportes'" class="flex-1 flex overflow-hidden">
     <!-- List -->
     <div class="flex-1 overflow-y-auto p-6 w-full lg:w-auto">
       <!-- Loading -->

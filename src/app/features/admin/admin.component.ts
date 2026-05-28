@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import {
@@ -11,6 +12,7 @@ import {
   TriageInput,
 } from '../../core/services/admin.service';
 import * as L from 'leaflet';
+import 'leaflet.markercluster';
 
 @Component({
   selector: 'app-admin',
@@ -27,17 +29,21 @@ export class AdminComponent implements OnInit {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   reportes = signal<ReporteAdmin[]>([]);
   reporteSeleccionado = signal<ReporteAdmin | null>(null);
   isLoading = signal(false);
   triageSuccess = signal(false);
+  vistaActiva = signal<'reportes' | 'mapa'>('reportes');
 
   filtroEstado = signal<number | null>(1);
   currentPage = signal(1);
   totalPages = signal(1);
   totalReportes = signal(0);
   pageSize = 10;
+
+  todosLosReportes: ReporteAdmin[] = [];
 
   estados = [
     { id: 1, nombre: 'Pendiente', color: '#F59E0B' },
@@ -56,6 +62,7 @@ export class AdminComponent implements OnInit {
   triageEnviando = false;
 
   private mapaActual: L.Map | null = null;
+  private clusterGroup: L.MarkerClusterGroup | null = null;
 
   ngOnInit(): void {
     this.cargarReportes();
@@ -100,6 +107,106 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  cargarReportesMapa(): void {
+    if (this.todosLosReportes.length > 0) {
+      setTimeout(() => this.inicializarMapaGeneral(), 100);
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    this.adminService.listarReportes(null, 1, 500).subscribe({
+      next: (res: PaginatedResult<ReporteAdmin>) => {
+        this.todosLosReportes = res.data;
+        this.isLoading.set(false);
+        setTimeout(() => this.inicializarMapaGeneral(), 100);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  private inicializarMapaGeneral(): void {
+    if (this.mapaActual) {
+      this.mapaActual.remove();
+    }
+
+    const container = document.getElementById('admin-mapa-container');
+    if (!container) return;
+
+    this.mapaActual = L.map('admin-mapa-container').setView([10.5, -74.3], 9);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap | GoberVial',
+      maxZoom: 18,
+    }).addTo(this.mapaActual);
+
+    if (this.clusterGroup) {
+      this.mapaActual.removeLayer(this.clusterGroup);
+    }
+
+    this.clusterGroup = L.markerClusterGroup({
+      chunkedLoading: true,
+      maxClusterRadius: 50,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      iconCreateFunction: (cluster) => {
+        const count = cluster.getChildCount();
+        let bg = count < 10 ? 'bg-blue-600' : count < 50 ? 'bg-yellow-500' : 'bg-red-500';
+        return L.divIcon({
+          html: `<div class="w-10 h-10 ${bg} rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg border-2 border-white">${count}</div>`,
+          className: 'custom-cluster-icon',
+          iconSize: L.point(40, 40),
+        });
+      },
+    });
+
+    const markers: L.Marker[] = [];
+    const self = this;
+
+    for (const r of this.todosLosReportes) {
+      const marker = L.marker([r.latitud, r.longitud], {
+        icon: L.divIcon({
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:${r.estado_color || '#3B82F6'};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,
+          className: 'custom-pin-icon',
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        }),
+      });
+
+      marker.bindPopup(`
+        <div style="font-family:system-ui,sans-serif;font-size:13px;min-width:180px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="width:10px;height:10px;border-radius:50%;background:${r.estado_color};display:inline-block"></span>
+            <strong>${r.categoria_nombre}</strong>
+          </div>
+          <p style="margin:2px 0;color:#666">Municipio: ${r.municipio_nombre}</p>
+          <p style="margin:2px 0;color:#666">Peligro: ${r.nivel_peligro}</p>
+          <p style="margin:2px 0;color:#666">Estado: ${r.estado_nombre}</p>
+          <p style="margin:2px 0;color:#666">Ciudadano: ${r.ciudadano_nombre}</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#999">Click en el pin para ver detalle</p>
+        </div>
+      `);
+
+      marker.on('click', () => {
+        self.verDetalle(r);
+      });
+
+      markers.push(marker);
+    }
+
+    this.clusterGroup.addLayers(markers);
+    this.mapaActual.addLayer(this.clusterGroup);
+
+    if (markers.length > 0) {
+      const bounds = L.latLngBounds(markers.map((m) => m.getLatLng()));
+      this.mapaActual.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
+    }
+
+    setTimeout(() => this.mapaActual?.invalidateSize(), 300);
+  }
+
   verDetalle(reporte: ReporteAdmin): void {
     this.reporteSeleccionado.set(reporte);
     this.triageAccion = 'aceptar';
@@ -109,7 +216,7 @@ export class AdminComponent implements OnInit {
     this.triageSuccess.set(false);
     this.triageEnviando = false;
 
-    setTimeout(() => this.inicializarMapa(reporte), 100);
+    setTimeout(() => this.inicializarMapaDetalle(reporte), 100);
   }
 
   cerrarDetalle(): void {
@@ -120,7 +227,7 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  private inicializarMapa(reporte: ReporteAdmin): void {
+  private inicializarMapaDetalle(reporte: ReporteAdmin): void {
     if (this.mapaActual) {
       this.mapaActual.remove();
     }
